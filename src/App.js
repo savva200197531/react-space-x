@@ -1,10 +1,15 @@
 import React from 'react';
+import { BrowserRouter, Route } from 'react-router-dom';
 
 import './style.css'
+
 import Header from './components/Header/Header';
 import Main from './components/Main/Main';
 import Features from './components/Features/Features';
 import Footer from './components/Footer/Footer';
+import Calendar from './components/Calendar/Calendar';
+import Details from './components/Details/Details';
+import Home from './components/Home/Home';
 
 import FetchData from './service/FetchData';
 
@@ -14,8 +19,14 @@ class App extends React.Component {
 
   state = {
     rocket: 'Falcon 1',
-    rocketsFeatures: null,
-    rockets: []
+    rocketFeatures: null,
+    rockets: [],
+    company: null,
+  }
+
+  componentDidMount() {
+    this.updateRocket()
+    this.updateCompany()
   }
 
   updateRocket() {
@@ -25,7 +36,9 @@ class App extends React.Component {
         return data
       })
       .then(data => data.find(item => item.name === this.state.rocket))
-      .then(rocketFeatures => this.setState({ rocketFeatures }))
+      .then(rocketFeatures => {
+        this.setState({ rocketFeatures })
+      })
   }
 
   changeRocket = rocket => {
@@ -34,20 +47,39 @@ class App extends React.Component {
     }, this.updateRocket)
   }
 
-  componentDidMount() {
-    this.updateRocket()
+  updateCompany() {
+    this.fetchData.getCompany()
+      .then(data => {
+        this.setState({company: data})
+      })
   }
 
   render() {
     return (
-      <>
-        <Header rockets={this.state.rockets} changeRocket={this.changeRocket}/>
-        <Main
-          rocket={ this.state.rocket }
-        />
-        <Features/>
-        <Footer/>
-      </>
+      <BrowserRouter>
+        <Header rockets={ this.state.rockets } changeRocket={ this.changeRocket }/>
+
+        <Route exact path={'/'}>
+          {this.state.company && <Home company={ this.state.company }/>}
+        </Route>
+
+        <Route path={'/rocket'}>
+          <Main rocket={this.state.rocket}/>
+          {this.state.rocketFeatures && <Features {...this.state.rocketFeatures}/>}
+        </Route>
+
+        <Route path={'/calendar'}>
+          <Calendar/>
+        </Route>
+
+        <Route path={'/details'}>
+          <Details/>
+        </Route>
+
+        {/*{this.state.rocketFeatures && <Features {...this.state.rocketFeatures} />}*/}
+        { this.state.company && <Footer {...this.state.company.links}/> }
+      </BrowserRouter>
+
     );
   }
 }
